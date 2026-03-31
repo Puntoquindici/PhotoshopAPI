@@ -203,6 +203,22 @@ struct SmartObjectLayer final: public Layer<T>, public ImageDataMixin<T>
 		{
 			PSAPI_LOG_ERROR("SmartObject", "Internal Error: Expected smart object layer to contain an AdditionalLayerInfo section");
 		}
+
+		// Preserve the rasterized smart object preview already stored on disk so unchanged
+		// roundtrips do not need to re-render the layer during export.
+		for (int i = 0; i < layerRecord.m_ChannelCount; ++i)
+		{
+			auto& channel_info = layerRecord.m_ChannelInformation[i];
+
+			// Layer<T> already extracts the user mask channel.
+			if (channel_info.m_ChannelID.id == Enum::ChannelID::UserSuppliedLayerMask) continue;
+
+			auto channel_ptr = channelImageData.extract_image_ptr(channel_info.m_ChannelID);
+			if (!channel_ptr) continue;
+
+			ImageDataMixin<T>::m_ImageData[channel_info.m_ChannelID] = std::move(channel_ptr);
+			store_was_cached(channel_info.m_ChannelID);
+		}
 	}
 
 
@@ -1018,6 +1034,46 @@ protected:
 		{
 			// Evaluate the warp and cache the result.
 			auto linked_layer = m_LinkedLayers->at(m_Hash);
+
+			// External smart objects can carry a placeholder raster preview. This keeps the
+			// PSD structurally valid while avoiding the expensive warp/render path.
+			if (linked_layer->type() == LinkedLayerType::external)
+			{
+				std::vector<T> channel_warp(this->width() * this->height(), static_cast<T>(0));
+
+				T opaque_value = std::numeric_limits<T>::max();
+				if constexpr (std::is_same_v<T, float32_t>)
+				{
+					opaque_value = 1.0f;
+				}
+
+				if (idinfo == s_alpha_idinfo)
+				{
+					std::fill(channel_warp.begin(), channel_warp.end(), opaque_value);
+				}
+				else if (idinfo.id == Enum::ChannelID::Red || idinfo.id == Enum::ChannelID::Blue)
+				{
+					std::fill(channel_warp.begin(), channel_warp.end(), opaque_value);
+				}
+
+				auto compression_codec = Enum::Compression::ZipPrediction;
+				if (ImageDataMixin<T>::m_ImageData.contains(idinfo))
+				{
+					compression_codec = ImageDataMixin<T>::m_ImageData[idinfo]->compression_codec();
+				}
+
+				ImageDataMixin<T>::m_ImageData[idinfo] = std::make_unique<channel_wrapper>(
+					compression_codec,
+					channel_warp,
+					idinfo,
+					Layer<T>::width(),
+					Layer<T>::height(),
+					Layer<T>::m_CenterX,
+					Layer<T>::m_CenterY
+				);
+				this->store_was_cached(idinfo);
+				return channel_warp;
+			}
 
 			// The alpha channel may not necessarily exist on the image data, however we always
 			// want to create it if that is the case. Other channels we do not generate though.
