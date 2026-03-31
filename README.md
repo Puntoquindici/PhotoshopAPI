@@ -1,5 +1,33 @@
 # PhotoshopAPI
 
+
+## Puntoquindici notes
+
+### Build PhotoshopAPI from sources
+
+Could not install latest version (0.8.2) on mac os, on linux it worked smoothly from pip.
+
+The writePSD pipeline has a rasterization step that is very slow, about 40s vs 1.7s with 2 smart objects.
+A patch was written to disable the rasterization and creates a dummy rasterized image.
+
+```sh
+python3 -m venv .venv
+pip3 install pillow numpy setuptools wheel scikit-build-core pybind11 numpy
+. .venv/bin/activate
+
+git clone --recursive --branch v0.8.2 https://github.com/EmilDohne/PhotoshopAPI.git
+cd PhotoshopAPI
+
+export CMAKE_OSX_ARCHITECTURES=arm64
+export CMAKE_PREFIX_PATH="$(brew --prefix eigen@3):${CMAKE_PREFIX_PATH}"\nexport Eigen3_DIR="$(brew --prefix eigen@3)/share/eigen3/cmake"\n\nCMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_PREFIX_PATH=$(brew --prefix eigen@3) -DEigen3_DIR=$(brew --prefix eigen@3)/share/eigen3/cmake"
+
+python -m pip install . -v
+```
+
+
+
+---
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q4TYALW)
 
 
