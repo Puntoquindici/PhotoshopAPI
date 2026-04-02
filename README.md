@@ -15,7 +15,8 @@ python3 -m venv .venv
 pip3 install pillow numpy setuptools wheel scikit-build-core pybind11 numpy
 . .venv/bin/activate
 
-git clone --recursive --branch v0.8.2 https://github.com/EmilDohne/PhotoshopAPI.git
+#git clone --recursive --branch v0.8.2 https://github.com/EmilDohne/PhotoshopAPI.git
+git clone --recursive --branch master https://github.com/Puntoquindici/PhotoshopAPI.git
 cd PhotoshopAPI
 
 export CMAKE_OSX_ARCHITECTURES=arm64
