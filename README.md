@@ -20,7 +20,10 @@ git clone --recursive --branch master https://github.com/Puntoquindici/Photoshop
 cd PhotoshopAPI
 
 export CMAKE_OSX_ARCHITECTURES=arm64
-export CMAKE_PREFIX_PATH="$(brew --prefix eigen@3):${CMAKE_PREFIX_PATH}"\nexport Eigen3_DIR="$(brew --prefix eigen@3)/share/eigen3/cmake"\n\nCMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_PREFIX_PATH=$(brew --prefix eigen@3) -DEigen3_DIR=$(brew --prefix eigen@3)/share/eigen3/cmake"
+export CMAKE_PREFIX_PATH="$(brew --prefix eigen@3):${CMAKE_PREFIX_PATH}"
+export Eigen3_DIR="$(brew --prefix eigen@3)/share/eigen3/cmake"
+
+CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_PREFIX_PATH=$(brew --prefix eigen@3) -DEigen3_DIR=$(brew --prefix eigen@3)/share/eigen3/cmake"
 
 python -m pip install . -v
 ```
