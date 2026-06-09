@@ -3,30 +3,22 @@
 
 ## Puntoquindici notes
 
-### Build PhotoshopAPI from sources
+This is a patched fork used by the `dealerportal-ai-tools` project. A pre-built macOS arm64 wheel is stored at `wheels/` in that project root — `uv sync` installs it directly without any build step.
 
-Could not install latest version (0.8.2) on mac os, on linux it worked smoothly from pip.
+### Patch (`SmartObjectLayer.h`)
 
-The writePSD pipeline has a rasterization step that is very slow, about 40s vs 1.7s with 2 smart objects.
-A patch was written to disable the rasterization and creates a dummy rasterized image.
+The upstream `writePSD` rasterizes every smart object layer (~40s with 2 smart objects). This fork bypasses the warp/render path for external smart objects and writes a dummy opaque preview instead, reducing write time to ~1.7s.
+
+### Rebuilding the wheel
+
+Only needed when this fork is updated. Run from the `dealerportal-ai-tools` root:
 
 ```sh
-python3 -m venv .venv
-pip3 install pillow numpy setuptools wheel scikit-build-core pybind11 numpy
-. .venv/bin/activate
-
-#git clone --recursive --branch v0.8.2 https://github.com/EmilDohne/PhotoshopAPI.git
-git clone --recursive --branch master https://github.com/Puntoquindici/PhotoshopAPI.git
-cd PhotoshopAPI
-
-export CMAKE_OSX_ARCHITECTURES=arm64
-export CMAKE_PREFIX_PATH="$(brew --prefix eigen@3):${CMAKE_PREFIX_PATH}"
-export Eigen3_DIR="$(brew --prefix eigen@3)/share/eigen3/cmake"
-
-CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_PREFIX_PATH=$(brew --prefix eigen@3) -DEigen3_DIR=$(brew --prefix eigen@3)/share/eigen3/cmake"
-
-python -m pip install . -v
+CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(brew --prefix eigen@3) -DEigen3_DIR=$(brew --prefix eigen@3)/share/eigen3/cmake" \
+  uv build ./3rdparty/PhotoshopAPI --wheel --out-dir wheels/
 ```
+
+`CMAKE_OSX_ARCHITECTURES=arm64` is already set in `pyproject.toml` so no export is needed. After the build, commit the new `.whl` file in `wheels/` and remove the old one.
 
 
 

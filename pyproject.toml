@@ -58,6 +58,7 @@ PSAPI_BUILD_BENCHMARKS = false
 # This is only the cpp examples, the python examples are still built.
 PSAPI_BUILD_EXAMPLES = false
 PSAPI_BUILD_TESTS = false
+CMAKE_OSX_ARCHITECTURES = "arm64"
 
 # Dynamically set the package version metadata by pasrsing CMakeLists.txt.
 [tool.scikit-build.metadata.version]
